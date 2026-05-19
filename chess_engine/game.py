@@ -485,9 +485,43 @@ class GameState:
         """Завантажує стан партії з текстового файлу."""
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()
+
+        # Зчитуємо рядок з ходами
+        moves_tokens = []
+        for line in text.splitlines():
+            line = line.strip()
+            if line.startswith("moves:"):
+                raw = line[len("moves:"):].strip()
+                if raw:
+                    moves_tokens = raw.split()
+                break
+
+        if moves_tokens:
+            try:
+                # Відтворюємо партію зі стандартної початкової позиції
+                gs = cls()
+                for token in moves_tokens:
+                    from_pos = Board.parse_square(token[:2])
+                    to_pos = Board.parse_square(token[2:4])
+                    promotion = token[4] if len(token) > 4 else None
+                    move = next(
+                        (m for m in gs.get_legal_moves()
+                         if m.from_pos == from_pos
+                         and m.to_pos == to_pos
+                         and m.promotion == promotion),
+                        None
+                    )
+                    if move is None:
+                        raise ValueError(f"Невалідний хід у файлі: {token}")
+                    gs.make_move(move)
+                return gs
+            except Exception:
+                pass  # не вдалося відтворити — завантажимо дошку як є
+
+        # Fallback: тільки дошка, без історії
+        # (позиція з тренажера або збій відтворення)
         gs = cls()
         gs.board = Board.from_text(text)
-        # Дефолтні значення.
         gs.current_player = WHITE
         gs.halfmove_clock = 0
         gs.fullmove_number = 1
@@ -507,6 +541,5 @@ class GameState:
                 gs.halfmove_clock = int(line.split("=", 1)[1])
             elif line.startswith("fullmove="):
                 gs.fullmove_number = int(line.split("=", 1)[1])
-        # Зафіксувати поточну позицію в лічильнику повторень.
         gs._position_counts[gs._position_key()] = 1
         return gs

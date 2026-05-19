@@ -124,6 +124,12 @@ class ChessApp(tk.Tk):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.update_idletasks()
+        w = dialog.winfo_width()
+        h = dialog.winfo_height()
+        x = self.winfo_x() + (self.winfo_width() // 2) - (w // 2)
+        y = self.winfo_y() + (self.winfo_height() // 2) - (h // 2)
+        dialog.geometry(f"+{x}+{y}")
 
         tk.Label(dialog, text="Грати кольором:",
                  font=("Arial", 11)).grid(row=0, column=0, padx=10, pady=8,
@@ -137,15 +143,27 @@ class ChessApp(tk.Tk):
         tk.Label(dialog, text="Складність (глибина):",
                  font=("Arial", 11)).grid(row=1, column=0, padx=10, pady=8,
                                           sticky="w")
-        depth_var = tk.IntVar(value=C.DEFAULT_AI_DEPTH)
+        depth_var = tk.StringVar(value=str(C.DEFAULT_AI_DEPTH))
         ttk.Spinbox(dialog, from_=C.MIN_AI_DEPTH, to=C.MAX_AI_DEPTH,
                     textvariable=depth_var, width=5).grid(row=1, column=1,
                                                            columnspan=2,
                                                            sticky="w")
 
         def confirm():
+            raw = depth_var.get().strip()
+            if not raw.lstrip('-').isdigit():
+                messagebox.showerror("Помилка",
+                                     f"Введіть ціле число від {C.MIN_AI_DEPTH} до {C.MAX_AI_DEPTH}.",
+                                     parent=dialog)
+                return
+            depth = int(raw)
+            if not (C.MIN_AI_DEPTH <= depth <= C.MAX_AI_DEPTH):
+                messagebox.showerror("Помилка",
+                                     f"Складність має бути від {C.MIN_AI_DEPTH} до {C.MAX_AI_DEPTH}.",
+                                     parent=dialog)
+                return
             self.human_color = color_var.get()
-            self.ai = ChessAI(depth=depth_var.get())
+            self.ai = ChessAI(depth=depth)
             dialog.destroy()
             self._start_pve()
 
@@ -177,10 +195,16 @@ class ChessApp(tk.Tk):
         )
         if not path:
             return
+        if not path.lower().endswith(".txt"):
+            messagebox.showerror("Невірний тип файлу",
+                                 "Можна завантажувати лише файли формату .txt")
+            return
         try:
             self.game = GameState.load_from_file(path)
-        except Exception as e:
-            messagebox.showerror("Помилка завантаження", str(e))
+        except Exception:
+            messagebox.showerror("Пошкоджений файл",
+                                 "Файл має невірний формат або пошкоджений.\n"
+                                 "Завантажте коректний файл збереження.")
             return
         self.mode = self.MODE_PVP   # за замовч. перейти у PvP
         self.human_color = WHITE
@@ -247,7 +271,7 @@ class ChessApp(tk.Tk):
                   command=self._new_game, width=14).grid(row=1, column=1,
                                                          padx=2, pady=2)
         tk.Button(btn_frame, text="Головне меню",
-                  command=self._build_menu_screen, width=30).grid(row=2,
+                  command=self._confirm_go_to_menu, width=30).grid(row=2,
                                                                     column=0,
                                                                     columnspan=2,
                                                                     padx=2,
@@ -489,9 +513,21 @@ class ChessApp(tk.Tk):
         self._refresh_history()
         self._update_status()
         self.board_widget.redraw()
+        if (self.mode == self.MODE_PVE
+                and not self.game.is_game_over()
+                and self.game.current_player != self.human_color):
+            self.after(300, self._make_ai_move)
 
     def _flip_board(self) -> None:
         self.board_widget.set_flipped(not self.board_widget._flipped)
+
+    def _confirm_go_to_menu(self) -> None:
+        if self.game.move_history:
+            if not messagebox.askyesno("Головне меню",
+                                       "Повернутись до головного меню?\n"
+                                       "Незбережений прогрес буде втрачено."):
+                return
+        self._build_menu_screen()
 
     def _new_game(self) -> None:
         if not messagebox.askyesno("Нова гра",

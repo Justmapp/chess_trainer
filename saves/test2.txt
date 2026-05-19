@@ -1,0 +1,14 @@
+rnbqkbnr
+pppp.ppp
+........
+....p...
+....P...
+........
+PPPP.PPP
+RNBQKBNR
+ep=e6
+turn=white
+castle=KQkq
+halfmove=0
+fullmove=2
+moves: e2e4 e7e5

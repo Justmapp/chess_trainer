@@ -1,0 +1,13 @@
+rnbqkbnr
+pp.ppppp
+..p.....
+........
+....P...
+........
+PPPP.PPP
+RNBQKBNR
+turn=white
+castle=KQkq
+halfmove=0
+fullmove=2
+moves: e2e4 c7c6

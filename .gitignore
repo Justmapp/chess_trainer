@@ -27,7 +27,6 @@ saves/*.chess
 
 # Build artifacts
 build/
-dist/
 *.egg-info/
 
 # Документація

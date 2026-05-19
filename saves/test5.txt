@@ -1,0 +1,13 @@
+....k.nr
+.pp..ppp
+..n.....
+.....b..
+.bB.....
+r.......
+KPq..PPP
+R....Q.R
+turn=white
+castle=k
+halfmove=0
+fullmove=19
+moves: b1c3 d7d5 g1f3 b8c6 d2d3 e7e5 e2e3 d5d4 e3d4 e5d4 c3e4 d8e7 f3d4 c6d4 c1e3 d4c6 e3a7 a8a7 d3d4 e7e4 e1d2 e4d4 f1d3 f8b4 d2c1 c8g4 d1f1 d4f4 c1b1 f4d2 d3c4 g4f5 a2a3 d2c2 b1a2 a7a3
